@@ -1,0 +1,54 @@
+name: DotnetSixProjectBuilder
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+        include-prerelease: false  
+
+    # Add NuGet Sources
+
+    - name: Create Local NuGet Directory
+      run: mkdir ~/nuget
+
+    - name: Add Local Nuget Source
+      run: dotnet nuget add source ~/nuget
+
+    - name: Add GGroupp NuGet Source
+      run: dotnet nuget add source ${{ secrets.GGROUPP_NUGET_SOURCE_URL }} -n ggroupp -u ${{ secrets.GGROUPP_NUGET_SOURCE_USER_NAME }} -p ${{ secrets.GGROUPP_NUGET_SOURCE_USER_PASSWORD }} --store-password-in-clear-text
+
+    # Command.Info.csproj
+
+    - name: Restore Command.Info.csproj
+      run: dotnet restore ./src/*/Command.Info.csproj
+
+    - name: Build Command.Info.csproj
+      run: dotnet build ./src/*/Command.Info.csproj --no-restore  -c Release
+
+    - name: Pack Command.Info.csproj
+      run: dotnet pack ./src/*/Command.Info.csproj --no-restore -o ~/nuget  -c Release
+
+    # Command.Stop.csproj
+
+    - name: Restore Command.Stop.csproj
+      run: dotnet restore ./src/*/Command.Stop.csproj
+
+    - name: Build Command.Stop.csproj
+      run: dotnet build ./src/*/Command.Stop.csproj --no-restore  -c Release
+
+    - name: Pack Command.Stop.csproj
+      run: dotnet pack ./src/*/Command.Stop.csproj --no-restore -o ~/nuget  -c Release
+
+    # Push
+
+    - name: Push Packages
+      if: ${{ github.ref == 'refs/heads/main' }}
+      run: dotnet nuget push "../../../nuget/*.nupkg" -s ${{ secrets.GGROUPP_NUGET_SOURCE_URL }} -k ${{ secrets.GGROUPP_NUGET_SOURCE_USER_PASSWORD }} --skip-duplicate
