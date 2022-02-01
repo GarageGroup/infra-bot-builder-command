@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
+using Newtonsoft.Json.Linq;
 
 namespace GGroupp.Infra.Bot.Builder;
 
@@ -73,7 +74,7 @@ public static class BotStopCommandBotBuilder
         BotStopCommandOption option,
         CancellationToken cancellationToken)
     {
-        return botContext.TurnContext.Activity.RecognizeCommandOrAbsent(commandName).FoldValueAsync(StopAsync, NextAsync);
+        return botContext.TurnContext.RecognizeCommandOrAbsent(commandName).FoldValueAsync(StopAsync, NextAsync);
 
         async ValueTask<Unit> StopAsync(string _)
         {
@@ -88,9 +89,9 @@ public static class BotStopCommandBotBuilder
             }
 
             var activity = MessageFactory.Text(option.SuccessText);
-            if (botContext.TurnContext.Activity.IsTelegram())
+            if (botContext.TurnContext.IsTelegramChannel())
             {
-                activity = activity.SetReplyTelegramKeyboardRemoveChannelData();
+                activity.ChannelData = CreateTelegramReplyKeyboardRemoveChannelData();
             }
 
             await botContext.TurnContext.SendActivityAsync(activity, cancellationToken).ConfigureAwait(false);
@@ -101,4 +102,13 @@ public static class BotStopCommandBotBuilder
             =>
             botContext.BotFlow.NextAsync(cancellationToken);
     }
+
+    private static JObject CreateTelegramReplyKeyboardRemoveChannelData()
+        =>
+        new TelegramChannelData(
+            parameters: new()
+            {
+                ReplyMarkup = new TelegramReplyKeyboardRemove()
+            })
+        .ToJObject();
 }

@@ -56,7 +56,7 @@ public static class BotInfoCommandBotBuilder
         BotInfoData botInfo,
         CancellationToken cancellationToken)
     {
-        return botContext.TurnContext.Activity.RecognizeCommandOrAbsent(commandName).FoldValueAsync(SendBotInfoAsync, NextAsync);
+        return botContext.TurnContext.RecognizeCommandOrAbsent(commandName).FoldValueAsync(SendBotInfoAsync, NextAsync);
 
         async ValueTask<Unit> SendBotInfoAsync(string _)
         {
