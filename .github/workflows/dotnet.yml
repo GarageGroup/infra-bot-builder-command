@@ -47,6 +47,17 @@ jobs:
     - name: Pack Command.Stop.csproj
       run: dotnet pack ./src/*/Command.Stop.csproj --no-restore -o ~/nuget  -c Release
 
+    # Command.Menu.csproj
+
+    - name: Restore Command.Menu.csproj
+      run: dotnet restore ./src/*/Command.Menu.csproj
+
+    - name: Build Command.Menu.csproj
+      run: dotnet build ./src/*/Command.Menu.csproj --no-restore  -c Release
+
+    - name: Pack Command.Menu.csproj
+      run: dotnet pack ./src/*/Command.Menu.csproj --no-restore -o ~/nuget  -c Release
+
     # Push
 
     - name: Push Packages
