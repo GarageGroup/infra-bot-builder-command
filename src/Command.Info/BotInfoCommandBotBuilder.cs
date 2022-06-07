@@ -60,6 +60,8 @@ public static class BotInfoCommandBotBuilder
 
         async ValueTask<Unit> SendBotInfoAsync(string _)
         {
+            botContext.BotTelemetryClient.TrackEvent("BotInfoGet");
+
             var activity = botContext.TurnContext.BuildBotInfoActivity(botInfo);
             await botContext.TurnContext.SendActivityAsync(activity, cancellationToken).ConfigureAwait(false);
 

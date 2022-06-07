@@ -78,6 +78,7 @@ public static class BotStopCommandBotBuilder
 
         async ValueTask<Unit> StopAsync(string _)
         {
+            botContext.BotTelemetryClient.TrackEvent("CommandStop");
             var user = await botContext.BotUserProvider.GetCurrentUserAsync(cancellationToken).ConfigureAwait(false);
 
             await botContext.UserState.ClearStateAsync(botContext.TurnContext, cancellationToken).ConfigureAwait(false);

@@ -8,13 +8,13 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>GGroupp.Infra.Bot.Builder</RootNamespace>
     <AssemblyName>GGroupp.Infra.Bot.Builder.Command.Stop</AssemblyName>
-    <Version>1.1.1</Version>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.Core" Version="1.2.0" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.Core" Version="1.3.0" />
     <PackageReference Include="GGroupp.Infra.Bot.Builder.Telegram.ChannelData" Version="1.0.0" />
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.TurnContext.Extensions" Version="1.0.1" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.TurnContext.Extensions" Version="1.2.0" />
   </ItemGroup>
 
 </Project>
