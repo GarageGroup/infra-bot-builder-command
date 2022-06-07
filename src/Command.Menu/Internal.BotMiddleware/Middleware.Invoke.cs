@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Bot.Builder;
 
 namespace GGroupp.Infra.Bot.Builder;
 
@@ -34,6 +35,8 @@ partial class MenuBotMiddleware
 
         ValueTask<Unit> SendMenuAsync()
         {
+            botContext.BotTelemetryClient.TrackDialogView("BotMenuShow");
+
             var menuActivity = botContext.TurnContext.CreateMenuActivity(menuData);
             return botContext.ReplaceMenuActivityAsync(menuActivity, cancellationToken);
         }
