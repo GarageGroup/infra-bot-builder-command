@@ -1,30 +1,28 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
 using Newtonsoft.Json.Linq;
 
 namespace GGroupp.Infra.Bot.Builder;
+
+using BotStopCommandOptionResolver = Func<IBotContext, BotStopCommandOption>;
 
 public static class BotStopCommandBotBuilder
 {
     private const string DefaultCommandName = "stop";
 
-    public static IBotBuilder UseBotStop(
-        this IBotBuilder botBuilder,
-        string commandName,
-        Func<IBotContext, BotStopCommandOption> optionResolver)
+    public static IBotBuilder UseBotStop(this IBotBuilder botBuilder, string commandName, BotStopCommandOptionResolver optionResolver)
         =>
         InnerUseBotStop(
             botBuilder ?? throw new ArgumentNullException(nameof(botBuilder)),
             commandName,
             optionResolver ?? throw new ArgumentNullException(nameof(optionResolver)));
 
-    public static IBotBuilder UseBotStop(
-        this IBotBuilder botBuilder,
-        string commandName,
-        Func<BotStopCommandOption> optionFactory)
+    public static IBotBuilder UseBotStop(this IBotBuilder botBuilder, string commandName, Func<BotStopCommandOption> optionFactory)
     {
         _ = botBuilder ?? throw new ArgumentNullException(nameof(botBuilder));
         _ = optionFactory ?? throw new ArgumentNullException(nameof(optionFactory));
@@ -36,10 +34,7 @@ public static class BotStopCommandBotBuilder
             optionFactory.Invoke();
     }
 
-    private static IBotBuilder InnerUseBotStop(
-        IBotBuilder botBuilder,
-        string commandName,
-        Func<IBotContext, BotStopCommandOption> optionResolver)
+    private static IBotBuilder InnerUseBotStop(IBotBuilder botBuilder, string commandName, BotStopCommandOptionResolver optionResolver)
     {
         return botBuilder.Use(InnerInvokeAsync);
 
@@ -78,16 +73,8 @@ public static class BotStopCommandBotBuilder
 
         async ValueTask<Unit> StopAsync(string _)
         {
-            botContext.BotTelemetryClient.TrackEvent("CommandStop");
-            var user = await botContext.BotUserProvider.GetCurrentUserAsync(cancellationToken).ConfigureAwait(false);
-
-            await botContext.UserState.ClearStateAsync(botContext.TurnContext, cancellationToken).ConfigureAwait(false);
+            botContext.BotTelemetryClient.TrackEvent("Start", botContext.TurnContext.Activity);
             await botContext.ConversationState.ClearStateAsync(botContext.TurnContext, cancellationToken).ConfigureAwait(false);
-
-            if (user is not null)
-            {
-                await botContext.BotUserProvider.SetCurrentUserAsync(user, cancellationToken).ConfigureAwait(false);
-            }
 
             var activity = MessageFactory.Text(option.SuccessText);
             if (botContext.TurnContext.IsTelegramChannel())
@@ -96,6 +83,8 @@ public static class BotStopCommandBotBuilder
             }
 
             await botContext.TurnContext.SendActivityAsync(activity, cancellationToken).ConfigureAwait(false);
+            botContext.BotTelemetryClient.TrackEvent("Complete", botContext.TurnContext.Activity);
+
             return default;
         }
 
@@ -112,4 +101,17 @@ public static class BotStopCommandBotBuilder
                 ReplyMarkup = new TelegramReplyKeyboardRemove()
             })
         .ToJObject();
+
+    private static void TrackEvent(this IBotTelemetryClient client, string eventName, IActivity activity)
+    {
+        const string flowId = "BotCommandStop";
+
+        var properties = new Dictionary<string, string>
+        {
+            { "FlowId", flowId },
+            { "InstanceId", activity.Id },
+        };
+
+        client.TrackEvent(flowId + eventName, properties);
+    }
 }

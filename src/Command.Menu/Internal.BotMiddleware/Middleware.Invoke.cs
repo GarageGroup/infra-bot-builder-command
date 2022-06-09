@@ -33,12 +33,15 @@ partial class MenuBotMiddleware
             =>
             botContext.StartWithCommandAsync(command, cancellationToken);
 
-        ValueTask<Unit> SendMenuAsync()
+        async ValueTask<Unit> SendMenuAsync()
         {
-            botContext.BotTelemetryClient.TrackDialogView("BotMenuShow");
+            var menuId = Guid.NewGuid();
+            botContext.BotTelemetryClient.TrackEvent("Start", menuId);
+
+            await botContext.GetMenuIdAccessor().SetAsync(botContext.TurnContext, menuId, cancellationToken).ConfigureAwait(false);
 
             var menuActivity = botContext.TurnContext.CreateMenuActivity(menuData);
-            return botContext.ReplaceMenuActivityAsync(menuActivity, cancellationToken);
+            return await botContext.ReplaceMenuActivityAsync(menuActivity, cancellationToken).ConfigureAwait(false);
         }
     }
 }
