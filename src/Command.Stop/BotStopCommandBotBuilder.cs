@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
-using Newtonsoft.Json.Linq;
 
 namespace GGroupp.Infra.Bot.Builder;
 
@@ -76,11 +76,7 @@ public static class BotStopCommandBotBuilder
             botContext.BotTelemetryClient.TrackEvent("Start", botContext.TurnContext.Activity);
             await botContext.ConversationState.ClearStateAsync(botContext.TurnContext, cancellationToken).ConfigureAwait(false);
 
-            var activity = MessageFactory.Text(option.SuccessText);
-            if (botContext.TurnContext.IsTelegramChannel())
-            {
-                activity.ChannelData = CreateTelegramReplyKeyboardRemoveChannelData();
-            }
+            var activity = botContext.TurnContext.CreateActivity(option);
 
             await botContext.TurnContext.SendActivityAsync(activity, cancellationToken).ConfigureAwait(false);
             botContext.BotTelemetryClient.TrackEvent("Complete", botContext.TurnContext.Activity);
@@ -93,14 +89,25 @@ public static class BotStopCommandBotBuilder
             botContext.BotFlow.NextAsync(cancellationToken);
     }
 
-    private static JObject CreateTelegramReplyKeyboardRemoveChannelData()
-        =>
-        new TelegramChannelData(
-            parameters: new()
+    private static IActivity CreateActivity(this ITurnContext turnContext, BotStopCommandOption option)
+    {
+        if (turnContext.IsNotTelegramChannel())
+        {
+            return MessageFactory.Text(option.SuccessText);
+        }
+
+        var tgActivity = MessageFactory.Text(default);
+        
+        var tgChannelData = new TelegramChannelData(
+            parameters: new(HttpUtility.HtmlEncode(option.SuccessText))
             {
+                ParseMode = TelegramParseMode.Html,
                 ReplyMarkup = new TelegramReplyKeyboardRemove()
-            })
-        .ToJObject();
+            });
+
+        tgActivity.ChannelData = tgChannelData.ToJObject();
+        return tgActivity;
+    }
 
     private static void TrackEvent(this IBotTelemetryClient client, string eventName, IActivity activity)
     {

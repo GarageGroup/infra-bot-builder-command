@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Web;
 using AdaptiveCards;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
@@ -16,49 +17,12 @@ partial class BotMenuActivity
             return CreateAdaptiveCardActivity(turnContext, menuData);
         }
 
-        if (turnContext.IsTelegramChannel())
+        if (turnContext.IsNotTelegramChannel())
         {
-            var text = BuildTelegramText(turnContext, menuData);
-            return MessageFactory.Text(text);
+            return CreateHeroCardActivity(menuData);
         }
 
-        return CreateHeroCardActivity(menuData);
-    }
-
-    private static string BuildTelegramText(ITurnContext turnContext, BotMenuData menuData)
-    {
-        var encodedText = turnContext.EncodeText(menuData.Text);
-        if (menuData.Commands.Any() is false)
-        {
-            return encodedText;
-        }
-
-        var textBuilder = new StringBuilder().Append("**").Append(encodedText).Append("**");
-
-        foreach (var command in menuData.Commands)
-        {
-            if (textBuilder.Length is not 0)
-            {
-                textBuilder.Append("\n\r").Append(LineSeparator).Append("\n\r");
-            }
-
-            var encodedCommandName = turnContext.EncodeText(command.Name);
-            var encodedCommandDescription = turnContext.EncodeText(command.Description);
-
-            if (string.IsNullOrEmpty(encodedCommandName) is false)
-            {
-                textBuilder.Append('/').Append(encodedCommandName);
-
-                if (string.IsNullOrEmpty(encodedCommandDescription) is false)
-                {
-                    textBuilder.Append(" - ");
-                }
-            }
-
-            textBuilder.Append(encodedCommandDescription);
-        }
-
-        return textBuilder.ToString();
+        return CreateTelegramActivity(menuData);
     }
 
     private static IActivity CreateAdaptiveCardActivity(ITurnContext context, BotMenuData menuData)
@@ -83,6 +47,20 @@ partial class BotMenuActivity
         }
         .ToAttachment()
         .ToActivity();
+
+    private static IActivity CreateTelegramActivity(BotMenuData menuData)
+    {
+        var activity = MessageFactory.Text(default);
+
+        var channelData = new TelegramChannelData(
+            parameters: new TelegramParameters(BuildTelegramText(menuData))
+            {
+                ParseMode = TelegramParseMode.Html
+            });
+
+        activity.ChannelData = channelData.ToJObject();
+        return activity;
+    }
 
     private static List<AdaptiveElement> CreateBody(BotMenuData menuData)
     {
@@ -126,6 +104,47 @@ partial class BotMenuActivity
             Id = command.Id,
             Name = command.Name
         };
+
+    private static string BuildTelegramText(BotMenuData menuData)
+    {
+        var encodedText = HttpUtility.HtmlEncode(menuData.Text);
+        if (menuData.Commands.Any() is false)
+        {
+            return encodedText;
+        }
+
+        var textBuilder = new StringBuilder();
+
+        if (string.IsNullOrEmpty(menuData.Text) is false)
+        {
+            textBuilder = textBuilder.Append("<b>").Append(encodedText).Append("</b>");
+        }
+
+        foreach (var command in menuData.Commands)
+        {
+            if (textBuilder.Length is not 0)
+            {
+                textBuilder.Append("\n\r").Append(LineSeparator).Append("\n\r");
+            }
+
+            var encodedCommandName = HttpUtility.HtmlEncode(command.Name);
+            var encodedCommandDescription = HttpUtility.HtmlEncode(command.Description);
+
+            if (string.IsNullOrEmpty(encodedCommandName) is false)
+            {
+                textBuilder.Append('/').Append(encodedCommandName);
+
+                if (string.IsNullOrEmpty(encodedCommandDescription) is false)
+                {
+                    textBuilder.Append(" - ");
+                }
+            }
+
+            textBuilder.Append(encodedCommandDescription);
+        }
+
+        return textBuilder.ToString();
+    }
 
     private static AdaptiveSchemaVersion GetAdaptiveSchemaVersion(this ITurnContext turnContext)
         =>
