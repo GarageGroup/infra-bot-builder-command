@@ -4,8 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
 
 namespace GGroupp.Infra.Bot.Builder;
@@ -76,17 +76,24 @@ public static class BotInfoCommandBotBuilder
 
     private static Activity BuildBotInfoActivity(this ITurnContext turnContext, BotInfoData botInfo)
     {
-        var isTeams = string.Equals(turnContext.Activity.ChannelId, Channels.Msteams, StringComparison.InvariantCultureIgnoreCase);
-        var separator = isTeams ? "<br>" : "\n\r\n\r";
-
-        var text = string.Join(separator, botInfo.Values.Where(NotEmptyValue).Select(GetValueText));
+        var text = string.Join(
+            turnContext.GetLineSeparator(),
+            botInfo.Values.Where(NotEmptyValue).Select(GetValueText));
 
         if (string.IsNullOrEmpty(text))
         {
-            return MessageFactory.Text("Bot information is empty.");
+            return MessageFactory.Text("Bot information is absent.");
         }
 
-        return MessageFactory.Text(text);
+        if (turnContext.IsNotTelegramChannel())
+        {
+            return MessageFactory.Text(text);
+        }
+
+        var tgActivity = MessageFactory.Text(default);
+        tgActivity.ChannelData = CreateTelegramChannelData(text).ToJObject();
+
+        return tgActivity;
 
         static bool NotEmptyValue(KeyValuePair<string, string?> item)
             =>
@@ -96,6 +103,24 @@ public static class BotInfoCommandBotBuilder
             =>
             $"{item.Key}: {item.Value}";
     }
+
+    private static string GetLineSeparator(this ITurnContext turnContext)
+    {
+        if (turnContext.IsMsteamsChannel())
+        {
+            return "<br>";
+        }
+
+        return turnContext.IsTelegramChannel() ? "\n\r" : "\n\r\n\r";
+    }
+
+    private static TelegramChannelData CreateTelegramChannelData(string text)
+        =>
+        new(
+            parameters: new TelegramParameters(HttpUtility.HtmlEncode(text))
+            {
+                ParseMode = TelegramParseMode.Html
+            });
 
     private static void TrackEvent(this IBotTelemetryClient client, string eventName, IActivity activity)
     {
