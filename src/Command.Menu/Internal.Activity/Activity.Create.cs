@@ -33,7 +33,7 @@ partial class BotMenuActivity
             Content = new AdaptiveCard(context.GetAdaptiveSchemaVersion())
             {
                 Body = CreateBody(menuData),
-                Actions = menuData.Commands.Where(HasDescription).Select(CreateAdaptiveSubmitAction).ToList<AdaptiveAction>()
+                Actions = menuData.Commands.AsEnumerable().Where(HasDescription).Select(CreateAdaptiveSubmitAction).ToList<AdaptiveAction>()
             }
         }
         .ToActivity();
@@ -43,7 +43,7 @@ partial class BotMenuActivity
         new HeroCard
         {
             Title = menuData.Text,
-            Buttons = menuData.Commands.Where(HasDescription).Select(CreateCommandAction).ToArray()
+            Buttons = menuData.Commands.AsEnumerable().Where(HasDescription).Select(CreateCommandAction).ToArray()
         }
         .ToAttachment()
         .ToActivity();
@@ -108,7 +108,7 @@ partial class BotMenuActivity
     private static string BuildTelegramText(BotMenuData menuData)
     {
         var encodedText = HttpUtility.HtmlEncode(menuData.Text);
-        if (menuData.Commands.Any() is false)
+        if (menuData.Commands.IsEmpty)
         {
             return encodedText;
         }

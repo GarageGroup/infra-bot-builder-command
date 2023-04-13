@@ -8,8 +8,8 @@ public static class BotMenuBotBuilder
 {
     public static IBotBuilder UseBotMenu(this IBotBuilder botBuilder, BotMenuData menuData)
     {
-        _ = botBuilder ?? throw new ArgumentNullException(nameof(botBuilder));
-        _ = menuData ?? throw new ArgumentNullException(nameof(menuData));
+        ArgumentNullException.ThrowIfNull(botBuilder);
+        ArgumentNullException.ThrowIfNull(menuData);
 
         return botBuilder.Use(InnerInvokeAsync);
 

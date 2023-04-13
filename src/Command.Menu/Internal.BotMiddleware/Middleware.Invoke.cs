@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Bot.Builder;
 
 namespace GGroupp.Infra.Bot.Builder;
 
@@ -9,7 +8,7 @@ partial class MenuBotMiddleware
 {
     internal static ValueTask<Unit> InvokeCommandAsync(this IBotContext botContext, BotMenuData menuData, CancellationToken cancellationToken)
     {
-        _ = botContext ?? throw new ArgumentNullException(nameof(botContext));
+        ArgumentNullException.ThrowIfNull(botContext);
 
         if (cancellationToken.IsCancellationRequested)
         {

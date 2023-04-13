@@ -24,8 +24,8 @@ public static class BotStopCommandBotBuilder
 
     public static IBotBuilder UseBotStop(this IBotBuilder botBuilder, string commandName, Func<BotStopCommandOption> optionFactory)
     {
-        _ = botBuilder ?? throw new ArgumentNullException(nameof(botBuilder));
-        _ = optionFactory ?? throw new ArgumentNullException(nameof(optionFactory));
+        ArgumentNullException.ThrowIfNull(botBuilder);
+        ArgumentNullException.ThrowIfNull(optionFactory);
 
         return InnerUseBotStop(botBuilder, commandName, ResolveOption);
 

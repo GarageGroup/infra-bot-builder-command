@@ -5,9 +5,9 @@ namespace GGroupp.Infra.Bot.Builder;
 
 public sealed record class BotInfoData
 {
-    public BotInfoData(IReadOnlyCollection<KeyValuePair<string, string?>> values)
+    public BotInfoData(FlatArray<KeyValuePair<string, string?>> values)
         =>
-        Values = values ?? Array.Empty<KeyValuePair<string, string?>>();
+        Values = values;
 
-    public IReadOnlyCollection<KeyValuePair<string, string?>> Values { get; }
+    public FlatArray<KeyValuePair<string, string?>> Values { get; }
 }

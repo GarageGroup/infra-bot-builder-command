@@ -1,18 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace GGroupp.Infra.Bot.Builder;
 
 public sealed record class BotMenuData
 {
-    public BotMenuData([AllowNull] string text, [AllowNull] IReadOnlyCollection<BotMenuCommand> commands)
+    public BotMenuData([AllowNull] string text, FlatArray<BotMenuCommand> commands)
     {
         Text = text ?? string.Empty;
-        Commands = commands ?? Array.Empty<BotMenuCommand>();
+        Commands = commands;
     }
 
     public string Text { get; }
 
-    public IReadOnlyCollection<BotMenuCommand> Commands { get; }
+    public FlatArray<BotMenuCommand> Commands { get; }
 }
