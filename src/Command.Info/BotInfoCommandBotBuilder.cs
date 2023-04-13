@@ -78,7 +78,7 @@ public static class BotInfoCommandBotBuilder
     {
         var text = string.Join(
             turnContext.GetLineSeparator(),
-            botInfo.Values.Where(NotEmptyValue).Select(GetValueText));
+            botInfo.Values.AsEnumerable().Where(NotEmptyValue).Select(GetValueText));
 
         if (string.IsNullOrEmpty(text))
         {
