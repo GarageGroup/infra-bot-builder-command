@@ -35,8 +35,6 @@ partial class MenuBotMiddleware
         async ValueTask<Unit> SendMenuAsync()
         {
             var menuId = Guid.NewGuid();
-            botContext.BotTelemetryClient.TrackEvent("Start", menuId);
-
             await botContext.GetMenuIdAccessor().SetAsync(botContext.TurnContext, menuId, cancellationToken).ConfigureAwait(false);
 
             var menuActivity = botContext.TurnContext.CreateMenuActivity(menuData);

@@ -60,12 +60,9 @@ public static class BotInfoCommandBotBuilder
 
         async ValueTask<Unit> SendBotInfoAsync(string _)
         {
-            botContext.BotTelemetryClient.TrackEvent("Start", botContext.TurnContext.Activity);
-
             var activity = botContext.TurnContext.BuildBotInfoActivity(botInfo);
             await botContext.TurnContext.SendActivityAsync(activity, cancellationToken).ConfigureAwait(false);
 
-            botContext.BotTelemetryClient.TrackEvent("Complete", botContext.TurnContext.Activity);
             return default;
         }
 
@@ -121,17 +118,4 @@ public static class BotInfoCommandBotBuilder
             {
                 ParseMode = TelegramParseMode.Html
             });
-
-    private static void TrackEvent(this IBotTelemetryClient client, string eventName, IActivity activity)
-    {
-        const string flowId = "BotInfoGet";
-
-        var properties = new Dictionary<string, string>
-        {
-            { "FlowId", flowId },
-            { "InstanceId", activity.Id }
-        };
-
-        client.TrackEvent(flowId + eventName, properties);
-    }
 }
