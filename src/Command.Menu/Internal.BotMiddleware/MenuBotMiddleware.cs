@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
@@ -26,9 +25,6 @@ internal static partial class MenuBotMiddleware
             await menuResourceAccessor.DeleteAsync(botContext.TurnContext, cancellationToken).ConfigureAwait(false);
 
             var menuIdAccessor = botContext.GetMenuIdAccessor();
-            var menuId = await menuIdAccessor.GetAsync(botContext.TurnContext, default, cancellationToken).ConfigureAwait(false);
-
-            botContext.BotTelemetryClient.TrackEvent("Complete", menuId);
             await menuIdAccessor.DeleteAsync(botContext.TurnContext, cancellationToken).ConfigureAwait(false);
         }
 
@@ -72,19 +68,6 @@ internal static partial class MenuBotMiddleware
         }
 
         await botContext.TurnContext.DeleteActivityAsync(previewActivity.Id, cancellationToken).ConfigureAwait(false);
-    }
-
-    private static void TrackEvent(this IBotTelemetryClient client, string eventName, Guid menuId)
-    {
-        const string flowId = "BotMenuShow";
-
-        var properties = new Dictionary<string, string>
-        {
-            { "FlowId", flowId },
-            { "InstanceId", menuId.ToString() },
-        };
-
-        client.TrackEvent(flowId + eventName, properties);
     }
 
     private static IStatePropertyAccessor<ResourceResponse?> GetMenuResourceAccessor(this IBotContext botContext)

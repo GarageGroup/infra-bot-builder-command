@@ -73,13 +73,10 @@ public static class BotStopCommandBotBuilder
 
         async ValueTask<Unit> StopAsync(string _)
         {
-            botContext.BotTelemetryClient.TrackEvent("Start", botContext.TurnContext.Activity);
             await botContext.ConversationState.ClearStateAsync(botContext.TurnContext, cancellationToken).ConfigureAwait(false);
 
             var activity = botContext.TurnContext.CreateActivity(option);
-
             await botContext.TurnContext.SendActivityAsync(activity, cancellationToken).ConfigureAwait(false);
-            botContext.BotTelemetryClient.TrackEvent("Complete", botContext.TurnContext.Activity);
 
             return default;
         }
@@ -107,18 +104,5 @@ public static class BotStopCommandBotBuilder
 
         tgActivity.ChannelData = tgChannelData.ToJObject();
         return tgActivity;
-    }
-
-    private static void TrackEvent(this IBotTelemetryClient client, string eventName, IActivity activity)
-    {
-        const string flowId = "BotCommandStop";
-
-        var properties = new Dictionary<string, string>
-        {
-            { "FlowId", flowId },
-            { "InstanceId", activity.Id },
-        };
-
-        client.TrackEvent(flowId + eventName, properties);
     }
 }
