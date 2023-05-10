@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,7 +6,7 @@ using System.Web;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 
-namespace GGroupp.Infra.Bot.Builder;
+namespace GarageGroup.Infra.Bot.Builder;
 
 using BotStopCommandOptionResolver = Func<IBotContext, BotStopCommandOption>;
 

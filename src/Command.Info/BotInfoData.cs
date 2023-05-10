@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GGroupp.Infra.Bot.Builder;
+namespace GarageGroup.Infra.Bot.Builder;
 
 public sealed record class BotInfoData
 {
