@@ -15,11 +15,12 @@ public static class BotStopCommandBotBuilder
     private const string DefaultCommandName = "stop";
 
     public static IBotBuilder UseBotStop(this IBotBuilder botBuilder, string commandName, BotStopCommandOptionResolver optionResolver)
-        =>
-        InnerUseBotStop(
-            botBuilder ?? throw new ArgumentNullException(nameof(botBuilder)),
-            commandName,
-            optionResolver ?? throw new ArgumentNullException(nameof(optionResolver)));
+    {
+        ArgumentNullException.ThrowIfNull(botBuilder);
+        ArgumentNullException.ThrowIfNull(optionResolver);
+
+        return InnerUseBotStop(botBuilder, commandName, optionResolver);
+    }
 
     public static IBotBuilder UseBotStop(this IBotBuilder botBuilder, string commandName, Func<BotStopCommandOption> optionFactory)
     {
@@ -48,7 +49,7 @@ public static class BotStopCommandBotBuilder
         [AllowNull] BotStopCommandOption option,
         CancellationToken cancellationToken)
     {
-        _ = botContext ?? throw new ArgumentNullException(nameof(botContext));
+        ArgumentNullException.ThrowIfNull(botContext);
 
         if (cancellationToken.IsCancellationRequested)
         {
@@ -85,23 +86,19 @@ public static class BotStopCommandBotBuilder
             botContext.BotFlow.NextAsync(cancellationToken);
     }
 
-    private static IActivity CreateActivity(this ITurnContext turnContext, BotStopCommandOption option)
+    private static Activity CreateActivity(this ITurnContext turnContext, BotStopCommandOption option)
     {
         if (turnContext.IsNotTelegramChannel())
         {
             return MessageFactory.Text(option.SuccessText);
         }
 
-        var tgActivity = MessageFactory.Text(default);
-        
-        var tgChannelData = new TelegramChannelData(
-            parameters: new(HttpUtility.HtmlEncode(option.SuccessText))
-            {
-                ParseMode = TelegramParseMode.Html,
-                ReplyMarkup = new TelegramReplyKeyboardRemove()
-            });
+        var telegramParameters = new TelegramParameters(HttpUtility.HtmlEncode(option.SuccessText))
+        {
+            ParseMode = TelegramParseMode.Html,
+            ReplyMarkup = new TelegramReplyKeyboardRemove()
+        };
 
-        tgActivity.ChannelData = tgChannelData.ToJObject();
-        return tgActivity;
+        return telegramParameters.BuildActivity();
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace GarageGroup.Infra.Bot.Builder;
@@ -8,7 +9,7 @@ public sealed record class BotStopCommandOption
 
     public BotStopCommandOption([AllowNull] string successText = DefaultSuccessText)
         =>
-        SuccessText = string.IsNullOrEmpty(successText) ? DefaultSuccessText : successText;
+        SuccessText = successText.OrNullIfWhiteSpace() ?? DefaultSuccessText;
 
     public string SuccessText { get; }
 }

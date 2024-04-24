@@ -16,8 +16,8 @@ public static class BotInfoCommandBotBuilder
 
     public static IBotBuilder UseBotInfo(this IBotBuilder botBuilder, string commandName, Func<IBotContext, BotInfoData> botInfoResover)
     {
-        _ = botBuilder ?? throw new ArgumentNullException(nameof(botBuilder));
-        _ = botInfoResover ?? throw new ArgumentNullException(nameof(botInfoResover));
+        ArgumentNullException.ThrowIfNull(botBuilder);
+        ArgumentNullException.ThrowIfNull(botInfoResover);
 
         return botBuilder.Use(InnerInvokeAsync);
 
@@ -36,7 +36,7 @@ public static class BotInfoCommandBotBuilder
         [AllowNull] BotInfoData botInfo,
         CancellationToken cancellationToken)
     {
-        _ = botContext ?? throw new ArgumentNullException(nameof(botContext));
+        ArgumentNullException.ThrowIfNull(botContext);
 
         if (cancellationToken.IsCancellationRequested)
         {
@@ -46,7 +46,7 @@ public static class BotInfoCommandBotBuilder
         return InnerInvokeCommandAsync(
             botContext: botContext,
             commandName: string.IsNullOrEmpty(commandName) ? DefaultCommandName : commandName,
-            botInfo: botInfo ?? new(Array.Empty<KeyValuePair<string, string?>>()),
+            botInfo: botInfo,
             cancellationToken: cancellationToken);
     }
 
@@ -87,10 +87,7 @@ public static class BotInfoCommandBotBuilder
             return MessageFactory.Text(text);
         }
 
-        var tgActivity = MessageFactory.Text(default);
-        tgActivity.ChannelData = CreateTelegramChannelData(text).ToJObject();
-
-        return tgActivity;
+        return CreateTelegramParameters(text).BuildActivity();
 
         static bool NotEmptyValue(KeyValuePair<string, string?> item)
             =>
@@ -111,11 +108,10 @@ public static class BotInfoCommandBotBuilder
         return turnContext.IsTelegramChannel() ? "\n\r" : "\n\r\n\r";
     }
 
-    private static TelegramChannelData CreateTelegramChannelData(string text)
+    private static TelegramParameters CreateTelegramParameters(string text)
         =>
-        new(
-            parameters: new TelegramParameters(HttpUtility.HtmlEncode(text))
-            {
-                ParseMode = TelegramParseMode.Html
-            });
+        new(HttpUtility.HtmlEncode(text))
+        {
+            ParseMode = TelegramParseMode.Html
+        };
 }

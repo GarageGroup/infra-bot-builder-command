@@ -14,103 +14,83 @@ partial class BotMenuActivity
     {
         if (turnContext.IsCardSupported())
         {
-            return CreateAdaptiveCardActivity(turnContext, menuData);
+            return CreateAdaptiveCard(turnContext, menuData).ToActivity();
         }
 
-        if (turnContext.IsNotTelegramChannel())
+        if (turnContext.IsTelegramChannel())
         {
-            return CreateHeroCardActivity(menuData);
+            return CreateTelegramParameters(menuData).BuildActivity();
         }
 
-        return CreateTelegramActivity(menuData);
+        return CreateHeroCard(menuData).ToAttachment().ToActivity();
     }
 
-    private static IActivity CreateAdaptiveCardActivity(ITurnContext context, BotMenuData menuData)
-        =>
-        new Attachment
+    private static Attachment CreateAdaptiveCard(ITurnContext context, BotMenuData menuData)
+    {
+        return new()
         {
             ContentType = AdaptiveCard.ContentType,
-            Content = new AdaptiveCard(context.GetAdaptiveSchemaVersion())
+            Content = new AdaptiveCard(context.IsMsteamsChannel() ? AdaptiveCard.KnownSchemaVersion : new(1, 0))
             {
                 Body = CreateBody(menuData),
                 Actions = menuData.Commands.AsEnumerable().Where(HasDescription).Select(CreateAdaptiveSubmitAction).ToList<AdaptiveAction>()
             }
-        }
-        .ToActivity();
+        };
 
-    private static IActivity CreateHeroCardActivity(BotMenuData menuData)
-        =>
-        new HeroCard
+        static List<AdaptiveElement> CreateBody(BotMenuData menuData)
+        {
+            if (string.IsNullOrEmpty(menuData.Text))
+            {
+                return [];
+            }
+
+            return
+            [
+                new AdaptiveTextBlock
+                {
+                    Text = menuData.Text,
+                    Weight = AdaptiveTextWeight.Bolder,
+                    Wrap = true
+                }
+            ];
+        }
+
+        static AdaptiveSubmitAction CreateAdaptiveSubmitAction(BotMenuCommand command)
+            =>
+            new()
+            {
+                Title = command.Description,
+                Data = ToActionValue(command)
+            };
+    }
+
+    private static HeroCard CreateHeroCard(BotMenuData menuData)
+    {
+        return new()
         {
             Title = menuData.Text,
             Buttons = menuData.Commands.AsEnumerable().Where(HasDescription).Select(CreateCommandAction).ToArray()
-        }
-        .ToAttachment()
-        .ToActivity();
+        };
 
-    private static IActivity CreateTelegramActivity(BotMenuData menuData)
-    {
-        var activity = MessageFactory.Text(default);
-
-        var channelData = new TelegramChannelData(
-            parameters: new TelegramParameters(BuildTelegramText(menuData))
+        static CardAction CreateCommandAction(BotMenuCommand command)
+            =>
+            new(ActionTypes.PostBack)
             {
-                ParseMode = TelegramParseMode.Html
-            });
-
-        activity.ChannelData = channelData.ToJObject();
-        return activity;
+                Title = command.Description,
+                Text = command.Description,
+                Value = ToActionValue(command)
+            };
     }
 
-    private static List<AdaptiveElement> CreateBody(BotMenuData menuData)
-    {
-        if (string.IsNullOrEmpty(menuData.Text))
-        {
-            return Enumerable.Empty<AdaptiveElement>().ToList();
-        }
-
-        return new()
-        {
-            new AdaptiveTextBlock
-            {
-                Text = menuData.Text,
-                Weight = AdaptiveTextWeight.Bolder,
-                Wrap = true
-            }
-        };
-    }
-
-    private static AdaptiveSubmitAction CreateAdaptiveSubmitAction(BotMenuCommand command)
-        =>
-        new()
-        {
-            Title = command.Description,
-            Data = ToActionValue(command)
-        };
-
-    private static CardAction CreateCommandAction(BotMenuCommand command)
-        =>
-        new(ActionTypes.PostBack)
-        {
-            Title = command.Description,
-            Text = command.Description,
-            Value = ToActionValue(command)
-        };
-
-    private static BotMenuCommandJson ToActionValue(BotMenuCommand command)
-        =>
-        new()
-        {
-            Id = command.Id,
-            Name = command.Name
-        };
-
-    private static string BuildTelegramText(BotMenuData menuData)
+    private static TelegramParameters CreateTelegramParameters(BotMenuData menuData)
     {
         var encodedText = HttpUtility.HtmlEncode(menuData.Text);
         if (menuData.Commands.IsEmpty)
         {
-            return encodedText;
+            return new(encodedText)
+            {
+                ParseMode = TelegramParseMode.Html
+            };
         }
 
         var textBuilder = new StringBuilder();
@@ -143,12 +123,19 @@ partial class BotMenuActivity
             textBuilder.Append(encodedCommandDescription);
         }
 
-        return textBuilder.ToString();
+        return new(textBuilder.ToString())
+        {
+            ParseMode = TelegramParseMode.Html
+        };
     }
 
-    private static AdaptiveSchemaVersion GetAdaptiveSchemaVersion(this ITurnContext turnContext)
+    private static BotMenuCommandJson ToActionValue(BotMenuCommand command)
         =>
-        turnContext.IsMsteamsChannel() ? AdaptiveCard.KnownSchemaVersion : new(1, 0);
+        new()
+        {
+            Id = command.Id,
+            Name = command.Name
+        };
 
     private static bool HasDescription(BotMenuCommand menuCommand)
         =>
