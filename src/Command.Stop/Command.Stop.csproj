@@ -1,20 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <InvariantGlobalization>true</InvariantGlobalization>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>GarageGroup.Infra.Bot.Builder</RootNamespace>
     <AssemblyName>GarageGroup.Infra.Bot.Builder.Command.Stop</AssemblyName>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GarageGroup.Infra.Bot.Builder.Core" Version="0.2.0" />
-    <PackageReference Include="GarageGroup.Infra.Bot.Builder.Telegram.ChannelData" Version="0.1.0" />
-    <PackageReference Include="GarageGroup.Infra.Bot.Builder.TurnContext.Extensions" Version="1.1.0" />
+    <PackageReference Include="GarageGroup.Infra.Bot.Builder.Core" Version="0.3.0" />
+    <PackageReference Include="GarageGroup.Infra.Bot.Builder.Telegram.ChannelData" Version="0.3.0" />
+    <PackageReference Include="GarageGroup.Infra.Bot.Builder.TurnContext.Extensions" Version="2.0.1" />
   </ItemGroup>
 
 </Project>

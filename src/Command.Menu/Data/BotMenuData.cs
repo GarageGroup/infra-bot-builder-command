@@ -7,7 +7,7 @@ public sealed record class BotMenuData
 {
     public BotMenuData([AllowNull] string text, FlatArray<BotMenuCommand> commands)
     {
-        Text = text ?? string.Empty;
+        Text = text.OrEmpty();
         Commands = commands;
     }
 

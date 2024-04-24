@@ -7,8 +7,8 @@ public sealed record class BotMenuCommand
     public BotMenuCommand(Guid id, string name, string description)
     {
         Id = id;
-        Name = name ?? string.Empty;
-        Description = description ?? string.Empty;
+        Name = name.OrEmpty();
+        Description = description.OrEmpty();
     }
 
     public Guid Id { get; }
